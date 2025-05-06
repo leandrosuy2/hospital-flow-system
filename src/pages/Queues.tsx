@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -51,7 +50,7 @@ import {
   deleteQueueItem
 } from '@/services/queueService';
 
-import { getPatients } from '@/services/patientService';
+import { getAllPatients } from '@/services/patientService';
 
 // Componente para renderizar o status do item na fila
 const QueueItemStatusBadge = ({ status }: { status: QueueItem['status'] }) => {
@@ -207,7 +206,7 @@ const Queues = () => {
   const handleOpenAddDialog = () => {
     try {
       // Buscar pacientes disponíveis
-      const allPatients = getPatients();
+      const allPatients = getAllPatients();
       
       // Filtrar pacientes que já estão na fila atual
       const patientsInQueue = new Set(queueItems.map(item => item.patientId));
