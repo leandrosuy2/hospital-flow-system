@@ -20,114 +20,25 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Eye, Trash2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Patient, PatientStatus } from '@/types';
 import { toast } from 'sonner';
-
-// Dados mockados dos pacientes
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    firstName: 'João',
-    lastName: 'Silva',
-    documentNumber: '123.456.789-00',
-    phone: '+5511999999999',
-    email: 'joao.silva@email.com',
-    birthDate: '1980-05-15',
-    address: 'Rua das Flores, 123',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01234-567',
-    emergencyContact: 'Maria Silva, +5511988888888',
-    medicalHistory: 'Hipertensão',
-    allergies: 'Penicilina',
-    medications: 'Losartana',
-    status: 'WAITING_TRIAGE',
-    createdAt: '2023-10-05T14:30:00.000Z',
-    updatedAt: '2023-10-05T14:30:00.000Z',
-  },
-  {
-    id: '2',
-    firstName: 'Maria',
-    lastName: 'Santos',
-    documentNumber: '987.654.321-00',
-    phone: '+5511977777777',
-    email: 'maria.santos@email.com',
-    birthDate: '1975-08-22',
-    address: 'Avenida Paulista, 1000',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01310-100',
-    emergencyContact: 'José Santos, +5511966666666',
-    medicalHistory: 'Diabetes tipo 2',
-    allergies: 'Sulfas',
-    medications: 'Metformina',
-    status: 'IN_TRIAGE',
-    createdAt: '2023-10-05T15:45:00.000Z',
-    updatedAt: '2023-10-05T16:30:00.000Z',
-  },
-  {
-    id: '3',
-    firstName: 'Carlos',
-    lastName: 'Oliveira',
-    documentNumber: '111.222.333-44',
-    phone: '+5511955555555',
-    email: 'carlos.oliveira@email.com',
-    birthDate: '1990-03-10',
-    address: 'Rua Augusta, 500',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01305-000',
-    emergencyContact: 'Ana Oliveira, +5511944444444',
-    medicalHistory: 'Asma',
-    allergies: 'Poeira, Ácaros',
-    medications: 'Salbutamol',
-    status: 'WAITING_CONSULTATION',
-    createdAt: '2023-10-06T09:15:00.000Z',
-    updatedAt: '2023-10-06T10:30:00.000Z',
-  },
-  {
-    id: '4',
-    firstName: 'Ana',
-    lastName: 'Pereira',
-    documentNumber: '444.555.666-77',
-    phone: '+5511933333333',
-    email: 'ana.pereira@email.com',
-    birthDate: '1985-11-25',
-    address: 'Rua Oscar Freire, 300',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01426-000',
-    emergencyContact: 'Paulo Pereira, +5511922222222',
-    medicalHistory: 'Enxaqueca crônica',
-    allergies: 'Nenhuma conhecida',
-    medications: 'Sumatriptano',
-    status: 'IN_CONSULTATION',
-    createdAt: '2023-10-06T11:00:00.000Z',
-    updatedAt: '2023-10-06T11:45:00.000Z',
-  },
-  {
-    id: '5',
-    firstName: 'Paulo',
-    lastName: 'Ferreira',
-    documentNumber: '777.888.999-00',
-    phone: '+5511911111111',
-    email: 'paulo.ferreira@email.com',
-    birthDate: '1970-07-03',
-    address: 'Alameda Santos, 700',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01418-100',
-    emergencyContact: 'Mariana Ferreira, +5511900000000',
-    medicalHistory: 'Arritmia cardíaca',
-    allergies: 'Frutos do mar',
-    medications: 'Propranolol',
-    status: 'COMPLETED',
-    createdAt: '2023-10-06T14:20:00.000Z',
-    updatedAt: '2023-10-06T16:00:00.000Z',
-  }
-];
+import { 
+  getAllPatients, 
+  deletePatient 
+} from '@/services/patientService';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Componente para mapear o status para um Badge com cor apropriada
 const StatusBadge = ({ status }: { status: PatientStatus }) => {
@@ -166,25 +77,25 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | 'ALL'>('ALL');
+  const [patientToDelete, setPatientToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        // Simulando chamada de API
-        setTimeout(() => {
-          setPatients(mockPatients);
-          setFilteredPatients(mockPatients);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Erro ao buscar pacientes:', error);
-        toast.error('Erro ao carregar lista de pacientes');
-        setLoading(false);
-      }
-    };
+  // Função para carregar os pacientes do localStorage
+  const loadPatients = () => {
+    try {
+      const patientData = getAllPatients();
+      setPatients(patientData);
+      setFilteredPatients(patientData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erro ao buscar pacientes:', error);
+      toast.error('Erro ao carregar lista de pacientes');
+      setLoading(false);
+    }
+  };
 
-    fetchPatients();
+  useEffect(() => {
+    loadPatients();
   }, []);
 
   useEffect(() => {
@@ -211,18 +122,22 @@ const Patients = () => {
   }, [searchTerm, statusFilter, patients]);
 
   const handleAddPatient = () => {
-    toast.info('Função para adicionar novo paciente');
-    // navigate('/patients/new');
+    navigate('/patients/new');
   };
 
   const handleViewPatient = (id: string) => {
-    toast.info(`Visualizando paciente ${id}`);
-    // navigate(`/patients/${id}`);
+    navigate(`/patients/${id}`);
   };
 
   const handleEditPatient = (id: string) => {
-    toast.info(`Editando paciente ${id}`);
-    // navigate(`/patients/${id}/edit`);
+    navigate(`/patients/${id}/edit`);
+  };
+
+  const handleDeletePatient = (id: string) => {
+    if (deletePatient(id)) {
+      loadPatients();
+      setPatientToDelete(null);
+    }
   };
 
   if (loading) {
@@ -338,6 +253,36 @@ const Patients = () => {
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Editar</span>
                         </Button>
+                        <AlertDialog open={patientToDelete === patient.id} onOpenChange={(isOpen) => !isOpen && setPatientToDelete(null)}>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setPatientToDelete(patient.id)}
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                              <span className="sr-only">Excluir</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir o paciente {patient.firstName} {patient.lastName}? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeletePatient(patient.id)}
+                                className="bg-red-500 hover:bg-red-600"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))
@@ -350,6 +295,7 @@ const Patients = () => {
           <div className="text-sm text-muted-foreground">
             Mostrando <b>{filteredPatients.length}</b> de <b>{patients.length}</b> pacientes
           </div>
+          {/* Paginação pode ser implementada aqui se necessário */}
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" disabled>
               Anterior
@@ -360,6 +306,27 @@ const Patients = () => {
           </div>
         </CardFooter>
       </Card>
+
+      {/* Dialog para confirmar exclusão de paciente */}
+      <AlertDialog open={!!patientToDelete} onOpenChange={(isOpen) => !isOpen && setPatientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => patientToDelete && handleDeletePatient(patientToDelete)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -10,6 +10,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
+import PatientCreate from "./pages/PatientCreate";
+import PatientEdit from "./pages/PatientEdit";
+import PatientView from "./pages/PatientView";
 import Queues from "./pages/Queues";
 import Triage from "./pages/Triage";
 import Departments from "./pages/Departments";
@@ -32,6 +35,9 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/patients" element={<Patients />} />
+              <Route path="/patients/new" element={<PatientCreate />} />
+              <Route path="/patients/:id" element={<PatientView />} />
+              <Route path="/patients/:id/edit" element={<PatientEdit />} />
               <Route path="/queues" element={<Queues />} />
               <Route path="/triage" element={<Triage />} />
               <Route path="/departments" element={<Departments />} />
