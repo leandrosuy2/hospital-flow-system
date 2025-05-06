@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -144,7 +143,7 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter className="p-4 border-t">
-        {user && (
+        {user && user.firstName && user.lastName && (
           <div className="flex flex-col space-y-3">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-hospital-primary flex items-center justify-center text-white">

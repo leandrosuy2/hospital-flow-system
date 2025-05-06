@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,15 @@ import QueueManagement from "./pages/QueueManagement";
 import Triage from "./pages/Triage";
 import Departments from "./pages/Departments";
 import NotFound from "./pages/NotFound";
+import Consultations from "./pages/Consultations";
+import ConsultationView from "@/pages/ConsultationView";
+import ConsultationEdit from "@/pages/ConsultationEdit";
+import ConsultationNew from "@/pages/ConsultationNew";
+import Scheduling from './pages/Scheduling';
+import Reports from './pages/Reports';
+import Users from './pages/Users';
+import Settings from './pages/Settings';
+import CallPanel from './pages/CallPanel';
 
 const queryClient = new QueryClient();
 
@@ -32,6 +40,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
+            {/* Rota do painel de chamadas (sem layout padrão) */}
+            <Route path="/painel" element={<CallPanel />} />
+            
             {/* Rotas protegidas dentro do layout */}
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
@@ -43,6 +54,14 @@ const App = () => (
               <Route path="/queue-management" element={<QueueManagement />} />
               <Route path="/triage" element={<Triage />} />
               <Route path="/departments" element={<Departments />} />
+              <Route path="/consultations" element={<Consultations />} />
+              <Route path="/consultations/new" element={<ConsultationNew />} />
+              <Route path="/consultations/:id" element={<ConsultationView />} />
+              <Route path="/consultations/:id/edit" element={<ConsultationEdit />} />
+              <Route path="/scheduling" element={<Scheduling />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             {/* Rota de fallback para qualquer outra URL */}

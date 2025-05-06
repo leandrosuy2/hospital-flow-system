@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -196,10 +195,20 @@ const Triage = () => {
       return;
     }
 
+    // Salvar dados da triagem no localStorage
+    const triageDataToSave = {
+      ...triageData,
+      patientId: selectedPatient?.id,
+      queueId: selectedQueue,
+      timestamp: new Date().toISOString(),
+    };
+
+    const savedTriages = JSON.parse(localStorage.getItem('triages') || '[]');
+    savedTriages.push(triageDataToSave);
+    localStorage.setItem('triages', JSON.stringify(savedTriages));
+
     toast.success('Triagem salva com sucesso!');
-    
-    // Resetar formulário
-    setSelectedPatient(null);
+    // Limpar dados após salvar
     setTriageData({
       temperature: '',
       bloodPressureSystolic: '',
@@ -213,6 +222,7 @@ const Triage = () => {
       chiefComplaint: '',
       notes: '',
     });
+    setSelectedPatient(null);
     setSelectedQueue('');
   };
 

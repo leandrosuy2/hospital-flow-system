@@ -1,4 +1,3 @@
-
 export type Role = 'ADMIN' | 'RECEPTIONIST' | 'NURSE' | 'DOCTOR';
 
 export type PatientStatus = 
@@ -100,19 +99,17 @@ export interface Triage {
 export interface Consultation {
   id: string;
   patientId: string;
+  patientName: string;
   doctorId: string;
-  symptoms: string;
-  diagnosis: string;
-  treatment: string;
-  notes: string;
-  followUpDate: string;
-  isCompleted: boolean;
+  doctorName: string;
+  date: string;
+  notes?: string;
+  status: ConsultationStatus;
   createdAt: string;
   updatedAt: string;
-  patient?: Patient;
-  doctor?: User;
-  prescriptions?: Prescription[];
 }
+
+export type ConsultationStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface Prescription {
   id: string;
