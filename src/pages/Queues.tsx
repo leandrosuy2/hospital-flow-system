@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -20,177 +21,37 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Spinner } from '@/components/ui/spinner';
-import { Queue, QueueItem, Department } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Queue, QueueItem, Patient } from '@/types';
 import { toast } from 'sonner';
 
-// Dados mockados para departamentos
-const mockDepartments: Department[] = [
-  {
-    id: '1',
-    name: 'Pronto-Socorro',
-    description: 'Atendimento de emergência',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-  },
-  {
-    id: '2',
-    name: 'Clínica Médica',
-    description: 'Atendimento clínico geral',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-  },
-  {
-    id: '3',
-    name: 'Pediatria',
-    description: 'Atendimento para crianças',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-  },
-];
+import { 
+  getQueues,
+  getQueueById,
+  getQueueItemsByQueueId,
+  updateQueueItemStatus,
+  addPatientToQueue,
+  deleteQueueItem
+} from '@/services/queueService';
 
-// Dados mockados para filas
-const mockQueues: Queue[] = [
-  {
-    id: '1',
-    name: 'Triagem PS',
-    description: 'Fila de triagem do Pronto-Socorro',
-    departmentId: '1',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-    department: mockDepartments[0],
-  },
-  {
-    id: '2',
-    name: 'Consultas PS',
-    description: 'Fila de consultas do Pronto-Socorro',
-    departmentId: '1',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-    department: mockDepartments[0],
-  },
-  {
-    id: '3',
-    name: 'Triagem Clínica',
-    description: 'Fila de triagem da Clínica Médica',
-    departmentId: '2',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-    department: mockDepartments[1],
-  },
-  {
-    id: '4',
-    name: 'Consultas Pediatria',
-    description: 'Fila de consultas da Pediatria',
-    departmentId: '3',
-    isActive: true,
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
-    department: mockDepartments[2],
-  },
-];
-
-// Dados mockados para itens de fila
-const mockQueueItems: QueueItem[] = [
-  {
-    id: '1',
-    patientId: '1',
-    queueId: '1',
-    position: 1,
-    status: 'WAITING',
-    notes: 'Febre alta',
-    metadata: { priority: 'alta', waitingSince: '09:15' },
-    createdAt: '2023-10-10T09:15:00.000Z',
-    updatedAt: '2023-10-10T09:15:00.000Z',
-    patient: {
-      id: '1',
-      firstName: 'João',
-      lastName: 'Silva',
-      documentNumber: '123.456.789-00',
-      phone: '+5511999999999',
-      email: 'joao.silva@email.com',
-      birthDate: '1980-05-15',
-      address: 'Rua das Flores, 123',
-      city: 'São Paulo',
-      state: 'SP',
-      zipCode: '01234-567',
-      emergencyContact: 'Maria Silva, +5511988888888',
-      medicalHistory: 'Hipertensão',
-      allergies: 'Penicilina',
-      medications: 'Losartana',
-      status: 'WAITING_TRIAGE',
-      createdAt: '2023-10-05T14:30:00.000Z',
-      updatedAt: '2023-10-05T14:30:00.000Z',
-    },
-  },
-  {
-    id: '2',
-    patientId: '2',
-    queueId: '1',
-    position: 2,
-    status: 'WAITING',
-    notes: 'Dor abdominal',
-    metadata: { priority: 'média', waitingSince: '09:30' },
-    createdAt: '2023-10-10T09:30:00.000Z',
-    updatedAt: '2023-10-10T09:30:00.000Z',
-    patient: {
-      id: '2',
-      firstName: 'Maria',
-      lastName: 'Santos',
-      documentNumber: '987.654.321-00',
-      phone: '+5511977777777',
-      email: 'maria.santos@email.com',
-      birthDate: '1975-08-22',
-      address: 'Avenida Paulista, 1000',
-      city: 'São Paulo',
-      state: 'SP',
-      zipCode: '01310-100',
-      emergencyContact: 'José Santos, +5511966666666',
-      medicalHistory: 'Diabetes tipo 2',
-      allergies: 'Sulfas',
-      medications: 'Metformina',
-      status: 'WAITING_TRIAGE',
-      createdAt: '2023-10-05T15:45:00.000Z',
-      updatedAt: '2023-10-05T15:45:00.000Z',
-    },
-  },
-  {
-    id: '3',
-    patientId: '3',
-    queueId: '2',
-    position: 1,
-    status: 'IN_PROGRESS',
-    notes: 'Consulta em andamento',
-    metadata: { priority: 'normal', waitingSince: '10:00' },
-    createdAt: '2023-10-10T10:00:00.000Z',
-    updatedAt: '2023-10-10T10:15:00.000Z',
-    patient: {
-      id: '3',
-      firstName: 'Carlos',
-      lastName: 'Oliveira',
-      documentNumber: '111.222.333-44',
-      phone: '+5511955555555',
-      email: 'carlos.oliveira@email.com',
-      birthDate: '1990-03-10',
-      address: 'Rua Augusta, 500',
-      city: 'São Paulo',
-      state: 'SP',
-      zipCode: '01305-000',
-      emergencyContact: 'Ana Oliveira, +5511944444444',
-      medicalHistory: 'Asma',
-      allergies: 'Poeira, Ácaros',
-      medications: 'Salbutamol',
-      status: 'IN_CONSULTATION',
-      createdAt: '2023-10-06T09:15:00.000Z',
-      updatedAt: '2023-10-06T10:30:00.000Z',
-    },
-  },
-];
+import { getPatients } from '@/services/patientService';
 
 // Componente para renderizar o status do item na fila
 const QueueItemStatusBadge = ({ status }: { status: QueueItem['status'] }) => {
@@ -223,48 +84,188 @@ const PriorityBadge = ({ priority }: { priority: string }) => {
 };
 
 const Queues = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const initialQueueId = queryParams.get('id') || '';
+
   const [queues, setQueues] = useState<Queue[]>([]);
   const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQueueId, setCurrentQueueId] = useState<string>('');
 
-  useEffect(() => {
-    const fetchQueues = async () => {
-      try {
-        // Simulando chamada de API
-        setTimeout(() => {
-          setQueues(mockQueues);
-          setQueueItems(mockQueueItems);
-          setCurrentQueueId(mockQueues[0].id);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Erro ao buscar filas:', error);
-        toast.error('Erro ao carregar filas');
-        setLoading(false);
-      }
-    };
+  // Estado para o diálogo de adicionar paciente
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [availablePatients, setAvailablePatients] = useState<Patient[]>([]);
+  const [addPatientForm, setAddPatientForm] = useState({
+    patientId: '',
+    priority: 'normal',
+    notes: ''
+  });
 
+  useEffect(() => {
     fetchQueues();
-  }, []);
+  }, [initialQueueId]);
+
+  const fetchQueues = async () => {
+    try {
+      setLoading(true);
+      const fetchedQueues = getQueues();
+      
+      if (fetchedQueues.length > 0) {
+        let queueId = initialQueueId || fetchedQueues[0].id;
+        setCurrentQueueId(queueId);
+        
+        // Buscar itens da fila atual
+        const fetchedQueueItems = getQueueItemsByQueueId(queueId);
+        setQueueItems(fetchedQueueItems);
+        setQueues(fetchedQueues);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar filas:', error);
+      toast.error('Erro ao carregar filas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeQueue = (queueId: string) => {
+    setCurrentQueueId(queueId);
+    navigate(`/queues?id=${queueId}`);
+    
+    try {
+      const fetchedQueueItems = getQueueItemsByQueueId(queueId);
+      setQueueItems(fetchedQueueItems);
+    } catch (error) {
+      console.error('Erro ao buscar itens da fila:', error);
+      toast.error('Erro ao carregar pacientes da fila');
+    }
+  };
 
   const handleViewPatient = (patientId: string) => {
-    toast.info(`Visualizando paciente ${patientId}`);
+    navigate(`/patients/${patientId}`);
   };
 
   const handleStartService = (itemId: string) => {
-    toast.info(`Iniciando atendimento para o item ${itemId}`);
+    try {
+      updateQueueItemStatus(itemId, 'IN_PROGRESS');
+      toast.info('Atendimento iniciado');
+      
+      // Atualizar a lista de itens
+      const updatedQueueItems = getQueueItemsByQueueId(currentQueueId);
+      setQueueItems(updatedQueueItems);
+    } catch (error) {
+      console.error('Erro ao iniciar atendimento:', error);
+      toast.error('Erro ao iniciar atendimento');
+    }
   };
 
   const handleCompleteService = (itemId: string) => {
-    toast.success(`Atendimento concluído para o item ${itemId}`);
+    try {
+      updateQueueItemStatus(itemId, 'COMPLETED');
+      toast.success('Atendimento concluído');
+      
+      // Atualizar a lista de itens
+      const updatedQueueItems = getQueueItemsByQueueId(currentQueueId);
+      setQueueItems(updatedQueueItems);
+    } catch (error) {
+      console.error('Erro ao concluir atendimento:', error);
+      toast.error('Erro ao concluir atendimento');
+    }
   };
 
   const handleCancelService = (itemId: string) => {
-    toast.error(`Atendimento cancelado para o item ${itemId}`);
+    try {
+      updateQueueItemStatus(itemId, 'CANCELED');
+      toast.error('Atendimento cancelado');
+      
+      // Atualizar a lista de itens
+      const updatedQueueItems = getQueueItemsByQueueId(currentQueueId);
+      setQueueItems(updatedQueueItems);
+    } catch (error) {
+      console.error('Erro ao cancelar atendimento:', error);
+      toast.error('Erro ao cancelar atendimento');
+    }
   };
 
-  const filteredQueueItems = queueItems.filter(item => item.queueId === currentQueueId);
+  const handleRemoveFromQueue = (itemId: string) => {
+    if (window.confirm('Tem certeza que deseja remover este paciente da fila?')) {
+      try {
+        deleteQueueItem(itemId);
+        toast.success('Paciente removido da fila');
+        
+        // Atualizar a lista de itens
+        const updatedQueueItems = getQueueItemsByQueueId(currentQueueId);
+        setQueueItems(updatedQueueItems);
+      } catch (error) {
+        console.error('Erro ao remover paciente da fila:', error);
+        toast.error('Erro ao remover paciente da fila');
+      }
+    }
+  };
+
+  const handleOpenAddDialog = () => {
+    try {
+      // Buscar pacientes disponíveis
+      const allPatients = getPatients();
+      
+      // Filtrar pacientes que já estão na fila atual
+      const patientsInQueue = new Set(queueItems.map(item => item.patientId));
+      const availablePats = allPatients.filter(patient => !patientsInQueue.has(patient.id));
+      
+      setAvailablePatients(availablePats);
+      setAddPatientForm({
+        patientId: availablePats.length > 0 ? availablePats[0].id : '',
+        priority: 'normal',
+        notes: ''
+      });
+      
+      setIsAddDialogOpen(true);
+    } catch (error) {
+      console.error('Erro ao preparar diálogo:', error);
+      toast.error('Erro ao preparar adição de paciente');
+    }
+  };
+
+  const handleAddPatientInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setAddPatientForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddPatientSelectChange = (name: string, value: string) => {
+    setAddPatientForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddPatientSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { patientId, priority, notes } = addPatientForm;
+      
+      if (!patientId) {
+        toast.error('Selecione um paciente');
+        return;
+      }
+      
+      addPatientToQueue(currentQueueId, patientId, priority, notes);
+      
+      toast.success('Paciente adicionado à fila');
+      setIsAddDialogOpen(false);
+      
+      // Atualizar a lista de itens
+      const updatedQueueItems = getQueueItemsByQueueId(currentQueueId);
+      setQueueItems(updatedQueueItems);
+    } catch (error) {
+      console.error('Erro ao adicionar paciente à fila:', error);
+      toast.error('Erro ao adicionar paciente à fila');
+    }
+  };
+
+  const handleManageQueues = () => {
+    navigate('/queue-management');
+  };
+
+  const filteredQueueItems = queueItems;
 
   if (loading) {
     return (
@@ -276,9 +277,14 @@ const Queues = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-hospital-dark">Filas</h1>
-        <p className="text-muted-foreground">Gerenciamento de filas de atendimento</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-hospital-dark">Filas</h1>
+          <p className="text-muted-foreground">Gerenciamento de filas de atendimento</p>
+        </div>
+        <Button onClick={handleManageQueues}>
+          Gerenciar Filas
+        </Button>
       </div>
 
       <Card className="shadow-sm">
@@ -289,139 +295,169 @@ const Queues = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs 
-            value={currentQueueId} 
-            onValueChange={setCurrentQueueId}
-            className="w-full"
-          >
-            <TabsList className="mb-4 w-full overflow-x-auto flex flex-nowrap">
-              {queues.map((queue) => (
-                <TabsTrigger 
-                  key={queue.id} 
-                  value={queue.id}
-                  className="whitespace-nowrap"
-                >
-                  {queue.name}
-                  <Badge variant="outline" className="ml-2">
-                    {filteredQueueItems.length}
-                  </Badge>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            {queues.map((queue) => (
-              <TabsContent key={queue.id} value={queue.id}>
-                <div className="mb-4 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-semibold">{queue.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {queue.description} - {queue.department?.name}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => toast.info(`Adicionar paciente à fila ${queue.name}`)}
-                    variant="outline"
-                    className="border-hospital-primary text-hospital-primary hover:bg-hospital-light"
+          {queues.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">Nenhuma fila encontrada.</p>
+              <Button onClick={handleManageQueues}>
+                Criar nova fila
+              </Button>
+            </div>
+          ) : (
+            <Tabs 
+              value={currentQueueId} 
+              onValueChange={handleChangeQueue}
+              className="w-full"
+            >
+              <TabsList className="mb-4 w-full overflow-x-auto flex flex-nowrap">
+                {queues.map((queue) => (
+                  <TabsTrigger 
+                    key={queue.id} 
+                    value={queue.id}
+                    className="whitespace-nowrap"
                   >
-                    Adicionar Paciente
-                  </Button>
-                </div>
+                    {queue.name}
+                    <Badge variant="outline" className="ml-2">
+                      {queueItems.filter(item => item.queueId === queue.id).length}
+                    </Badge>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              {queues.map((queue) => (
+                <TabsContent key={queue.id} value={queue.id}>
+                  <div className="mb-4 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold">{queue.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {queue.description} - {queue.department?.name}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleOpenAddDialog}
+                      variant="outline"
+                      className="border-hospital-primary text-hospital-primary hover:bg-hospital-light"
+                    >
+                      Adicionar Paciente
+                    </Button>
+                  </div>
 
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Posição</TableHead>
-                        <TableHead>Paciente</TableHead>
-                        <TableHead>Prioridade</TableHead>
-                        <TableHead>Aguardando desde</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredQueueItems.length === 0 ? (
+                  <div className="rounded-md border overflow-hidden">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            Não há pacientes nesta fila.
-                          </TableCell>
+                          <TableHead>Posição</TableHead>
+                          <TableHead>Paciente</TableHead>
+                          <TableHead>Prioridade</TableHead>
+                          <TableHead>Aguardando desde</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
-                      ) : (
-                        filteredQueueItems.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-bold">{item.position}</TableCell>
-                            <TableCell>
-                              <div className="font-medium">
-                                {item.patient?.firstName} {item.patient?.lastName}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {item.patient?.documentNumber}
-                              </div>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredQueueItems.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              Não há pacientes nesta fila.
                             </TableCell>
-                            <TableCell>
-                              <PriorityBadge priority={item.metadata.priority} />
-                            </TableCell>
-                            <TableCell>{item.metadata.waitingSince}</TableCell>
-                            <TableCell>
-                              <QueueItemStatusBadge status={item.status} />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewPatient(item.patientId)}
-                                className="text-gray-500 hover:text-gray-700"
-                              >
-                                Visualizar
-                              </Button>
-                              {item.status === 'WAITING' && (
+                          </TableRow>
+                        ) : (
+                          filteredQueueItems.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-bold">{item.position}</TableCell>
+                              <TableCell>
+                                <div className="font-medium">
+                                  {item.patient?.firstName} {item.patient?.lastName}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {item.patient?.documentNumber}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <PriorityBadge priority={item.metadata.priority} />
+                              </TableCell>
+                              <TableCell>{item.metadata.waitingSince}</TableCell>
+                              <TableCell>
+                                <QueueItemStatusBadge status={item.status} />
+                              </TableCell>
+                              <TableCell className="text-right">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleStartService(item.id)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  onClick={() => handleViewPatient(item.patientId)}
+                                  className="text-gray-500 hover:text-gray-700"
                                 >
-                                  Iniciar
+                                  Visualizar
                                 </Button>
-                              )}
-                              {item.status === 'IN_PROGRESS' && (
-                                <>
+                                {item.status === 'WAITING' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleStartService(item.id)}
+                                      className="text-blue-500 hover:text-blue-700"
+                                    >
+                                      Iniciar
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleRemoveFromQueue(item.id)}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      Remover
+                                    </Button>
+                                  </>
+                                )}
+                                {item.status === 'IN_PROGRESS' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCompleteService(item.id)}
+                                      className="text-green-500 hover:text-green-700"
+                                    >
+                                      Concluir
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCancelService(item.id)}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      Cancelar
+                                    </Button>
+                                  </>
+                                )}
+                                {(item.status === 'COMPLETED' || item.status === 'CANCELED') && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleCompleteService(item.id)}
-                                    className="text-green-500 hover:text-green-700"
-                                  >
-                                    Concluir
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleCancelService(item.id)}
+                                    onClick={() => handleRemoveFromQueue(item.id)}
                                     className="text-red-500 hover:text-red-700"
                                   >
-                                    Cancelar
+                                    Remover
                                   </Button>
-                                </>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-                
-                <div className="mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Total: <b>{filteredQueueItems.length}</b> paciente(s) 
-                    | Aguardando: <b>{filteredQueueItems.filter(item => item.status === 'WAITING').length}</b>
-                    | Em Atendimento: <b>{filteredQueueItems.filter(item => item.status === 'IN_PROGRESS').length}</b>
-                  </p>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Total: <b>{filteredQueueItems.length}</b> paciente(s) 
+                      | Aguardando: <b>{filteredQueueItems.filter(item => item.status === 'WAITING').length}</b>
+                      | Em Atendimento: <b>{filteredQueueItems.filter(item => item.status === 'IN_PROGRESS').length}</b>
+                      | Concluídos: <b>{filteredQueueItems.filter(item => item.status === 'COMPLETED').length}</b>
+                    </p>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col gap-2 border-t pt-4">
           <div className="flex items-center w-full justify-between bg-muted/50 p-3 rounded-md">
@@ -444,10 +480,95 @@ const Queues = () => {
           </div>
           
           <div className="self-start text-xs text-muted-foreground italic">
-            As filas são atualizadas automaticamente a cada 30 segundos.
+            As filas são atualizadas automaticamente ao realizar ações.
           </div>
         </CardFooter>
       </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Paciente à Fila</DialogTitle>
+            <DialogDescription>
+              Selecione um paciente e defina a prioridade.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleAddPatientSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="patientId" className="text-right">
+                  Paciente
+                </Label>
+                {availablePatients.length > 0 ? (
+                  <Select 
+                    value={addPatientForm.patientId}
+                    onValueChange={(value) => handleAddPatientSelectChange('patientId', value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione um paciente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePatients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.firstName} {patient.lastName} - {patient.documentNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="col-span-3 text-muted-foreground">
+                    Não há pacientes disponíveis para adicionar à fila.
+                  </div>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="priority" className="text-right">
+                  Prioridade
+                </Label>
+                <Select 
+                  value={addPatientForm.priority}
+                  onValueChange={(value) => handleAddPatientSelectChange('priority', value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione a prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="média">Média</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Observações
+                </Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={addPatientForm.notes}
+                  onChange={handleAddPatientInputChange}
+                  placeholder="Observações sobre o paciente"
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={availablePatients.length === 0}>
+                Adicionar à Fila
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

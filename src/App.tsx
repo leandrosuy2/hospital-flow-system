@@ -14,6 +14,7 @@ import PatientCreate from "./pages/PatientCreate";
 import PatientEdit from "./pages/PatientEdit";
 import PatientView from "./pages/PatientView";
 import Queues from "./pages/Queues";
+import QueueManagement from "./pages/QueueManagement";
 import Triage from "./pages/Triage";
 import Departments from "./pages/Departments";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/patients/:id" element={<PatientView />} />
               <Route path="/patients/:id/edit" element={<PatientEdit />} />
               <Route path="/queues" element={<Queues />} />
+              <Route path="/queue-management" element={<QueueManagement />} />
               <Route path="/triage" element={<Triage />} />
               <Route path="/departments" element={<Departments />} />
             </Route>
