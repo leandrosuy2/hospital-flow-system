@@ -1,5 +1,6 @@
 
 import { Department, Queue, QueueItem } from "@/types";
+import { getPatientById } from "@/services/patientService";
 
 // Dados mockados para departamentos
 const initialDepartments: Department[] = [
@@ -274,9 +275,6 @@ export const getQueueItemById = (id: string): QueueItem | undefined => {
 export const getQueueItemsByQueueId = (queueId: string): QueueItem[] => {
   const items = getQueueItems();
   
-  // Import patient service to get patient data
-  const { getPatientById } = require('./patientService');
-  
   return items
     .filter(item => item.queueId === queueId)
     .map(item => {
@@ -307,8 +305,7 @@ export const createQueueItem = (queueItem: Omit<QueueItem, 'id' | 'createdAt' | 
   items.push(newItem);
   localStorage.setItem('queueItems', JSON.stringify(items));
   
-  // Import patient service to get patient data
-  const { getPatientById } = require('./patientService');
+  // Get patient data
   newItem.patient = getPatientById(queueItem.patientId);
   
   return newItem;
@@ -329,8 +326,7 @@ export const updateQueueItem = (id: string, data: Partial<QueueItem>): QueueItem
   items[index] = updatedItem;
   localStorage.setItem('queueItems', JSON.stringify(items));
   
-  // Import patient service to get patient data
-  const { getPatientById } = require('./patientService');
+  // Get patient data
   updatedItem.patient = getPatientById(updatedItem.patientId);
   
   return updatedItem;
